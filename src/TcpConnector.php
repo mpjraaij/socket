@@ -98,9 +98,13 @@ final class TcpConnector implements ConnectorInterface
                 // The following hack looks like the only way to
                 // detect connection refused errors with PHP's stream sockets.
                 if (false === \stream_socket_get_name($stream, true)) {
+                    $socket = \socket_import_stream($stream);
+                    $errno = \socket_get_option($socket, \SOL_SOCKET, \SO_ERROR);
+                    $errstr = \socket_strerror($errno);
+
                     \fclose($stream);
 
-                    $reject(new \RuntimeException('Connection to ' . $uri . ' failed: Connection refused'));
+                    $reject(new \RuntimeException('Connection to ' . $uri . ' failed: Connection refused (' . $errstr . ')'));
                 } else {
                     $resolve(new Connection($stream, $loop));
                 }
